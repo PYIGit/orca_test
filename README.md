@@ -4,8 +4,8 @@
 
 ## 요구사항
 
-- Python 3.x (외부 의존성 없음)
-- 테스트 실행 시에만 `pytest` 필요
+- Python 3.x (외부 의존성 없음) — 이 문서의 모든 예시는 Python 3.12.7에서 검증했습니다
+- 테스트 실행 시에만 `pytest` 필요 (7.4.4에서 검증)
 
 ## 빠른 시작
 
@@ -20,6 +20,17 @@ print(factorial(0))   # 1
 
 > `src` 패키지를 찾으려면 저장소 루트가 `sys.path`에 있어야 합니다.
 > 다른 위치에서 실행한다면 `PYTHONPATH`에 저장소 루트를 추가하세요.
+>
+> ```bash
+> # Linux / macOS
+> PYTHONPATH=/path/to/repo python your_script.py
+> ```
+> ```powershell
+> # Windows PowerShell
+> $env:PYTHONPATH = "C:\path\to\repo"; python your_script.py
+> ```
+>
+> 설정하지 않으면 `ModuleNotFoundError: No module named 'src'`가 납니다.
 
 ---
 
@@ -95,7 +106,7 @@ factorial(MAX_N)    # 계산됨 (2568자리)
 
 ## 동작 명세 (엣지 케이스)
 
-아래는 실제 실행으로 확인한 결과입니다.
+아래는 실제 실행으로 확인한 결과입니다 (Python 3.12.7 기준).
 
 | 입력 | 결과 |
 | --- | --- |
@@ -109,7 +120,8 @@ factorial(MAX_N)    # 계산됨 (2568자리)
 | `factorial(3.5)` | `TypeError: 'float' object cannot be interpreted as an integer` |
 | `factorial("3")` | `TypeError: '<' not supported between instances of 'str' and 'int'` |
 | `factorial(None)` | `TypeError: '<' not supported between instances of 'NoneType' and 'int'` |
-| `factorial(True)` | `1` |
+| `factorial(True)` | `1` (`factorial(1)`과 동일) |
+| `factorial(False)` | `1` (`factorial(0)`과 동일) |
 
 ### 알아둘 점
 
@@ -120,7 +132,8 @@ factorial(MAX_N)    # 계산됨 (2568자리)
   이는 의도적으로 설계된 예외 메시지가 아닙니다. 호출 전에 정수임을 보장하세요.
 - **`2.0`처럼 값이 정수인 float도 거부됩니다.** 필요하다면 `factorial(int(x))`로 변환해서 넘기세요.
 - **`bool`은 통과합니다.** Python에서 `bool`은 `int`의 하위 타입이라
-  `factorial(True)`는 `factorial(1)`과 같이 동작합니다.
+  `factorial(True)`는 `factorial(1)`, `factorial(False)`는 `factorial(0)`과 같이 동작합니다.
+  둘 다 결과가 `1`이라 눈에 잘 띄지 않으니, 플래그 값을 실수로 넘기지 않도록 주의하세요.
 - **모듈을 import하면 `first calc`가 출력됩니다.**
   `src/calc.py` 최상단에 모듈 레벨 `print("first calc")`가 있어,
   `from src.calc import factorial`을 하는 것만으로 stdout에 한 줄이 찍힙니다.
@@ -154,9 +167,23 @@ python -m pytest tests/ -q
 
 ```
 .
-├── README.md
+├── README.md            # 이 문서 (사용법 + API 레퍼런스)
+├── REVIEW.md            # 코드 리뷰 리포트 (알려진 이슈)
 ├── src/
 │   └── calc.py          # factorial 구현
 └── tests/
     └── test_calc.py     # factorial 테스트
 ```
+
+패키징 설정(`pyproject.toml`, `setup.py`)이나 `conftest.py`는 없습니다.
+그래서 위 "빠른 시작"과 "테스트" 항목의 `sys.path` 주의사항이 필요합니다.
+
+## 알려진 이슈
+
+자세한 분석은 [`REVIEW.md`](REVIEW.md)에 있습니다. 사용자 입장에서 영향이 있는 것만 요약하면:
+
+| 이슈 | 영향 |
+| --- | --- |
+| `pytest tests/` 직접 실행 시 수집 실패 | `python -m pytest`로 실행하면 회피됩니다 |
+| import 시 `first calc` 표준출력 | stdout을 파싱하는 스크립트에서 주의 |
+| 비정수 입력에 대한 타입 검증 없음 | 호출 전에 정수임을 보장해야 합니다 |
