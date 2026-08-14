@@ -1,0 +1,18 @@
+# pytest 설정.
+#
+# pythonpath: 프로젝트 루트를 sys.path에 추가한다.
+#   tests/test_calc.py의 `from src.calc import factorial`을 해석하기 위해 필요하다.
+# testpaths: 인자 없이 pytest를 실행했을 때 수집할 기본 경로.
+# addopts: src의 독스트링 예제(doctest)도 함께 검증한다.
+#
+# 이 파일이 존재하면 pytest의 rootdir가 프로젝트 루트로 고정되므로,
+# 하위 디렉토리에서 실행하거나 --import-mode=importlib를 써도 임포트가 깨지지 않는다.
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests", "src"]
+addopts = "--doctest-modules"
+
+# 개발 의존성. `pythonpath` ini 옵션이 pytest 7.0부터 내장이라 하한을 명시한다.
+# 설치: pip install pytest>=7.0  (또는 uv 등 dependency-groups 지원 도구)
+[dependency-groups]
+dev = ["pytest>=7.0"]
